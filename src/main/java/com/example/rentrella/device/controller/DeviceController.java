@@ -1,5 +1,7 @@
-package com.example.rentrella.device;
+package com.example.rentrella.device.controller;
 
+import com.example.rentrella.device.service.DeviceService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,11 +15,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/commands")
+@RequiredArgsConstructor
 public class DeviceController {
+
+    private final DeviceService deviceService;
 
     @GetMapping("/latest")
     public ResponseEntity<?> pollLatestCommand(@RequestParam Long deviceId) {
-        throw new UnsupportedOperationException();
+        return ResponseEntity.ok(deviceService.pollLatestCommand(deviceId));
     }
 
     @PostMapping("/{commandId}/complete")
