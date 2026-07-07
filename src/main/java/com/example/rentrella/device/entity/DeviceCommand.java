@@ -38,4 +38,8 @@ public class DeviceCommand {
         this.deviceId = deviceId;
         this.status = status;
     }
+
+    public void complete() {
+        this.status = CommandStatus.DONE;
+    }
 }
