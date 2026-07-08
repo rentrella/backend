@@ -42,4 +42,8 @@ public class Umbrella {
     public void rent() {
         this.status = UmbrellaStatus.RENTED;
     }
+
+    public void returnRental() {
+        this.status = UmbrellaStatus.AVAILABLE;
+    }
 }

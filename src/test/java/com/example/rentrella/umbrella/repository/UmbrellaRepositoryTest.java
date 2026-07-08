@@ -29,4 +29,14 @@ class UmbrellaRepositoryTest {
     void 존재하지_않는_deviceId면_빈_값을_반환한다() {
         assertThat(umbrellaRepository.findByDeviceId(999L)).isEmpty();
     }
+
+    @Test
+    void 상태별_우산_개수를_센다() {
+        umbrellaRepository.save(new Umbrella(1L, UmbrellaStatus.AVAILABLE));
+        umbrellaRepository.save(new Umbrella(2L, UmbrellaStatus.AVAILABLE));
+        umbrellaRepository.save(new Umbrella(3L, UmbrellaStatus.RENTED));
+
+        assertThat(umbrellaRepository.countByStatus(UmbrellaStatus.AVAILABLE)).isEqualTo(2L);
+        assertThat(umbrellaRepository.countByStatus(UmbrellaStatus.RENTED)).isEqualTo(1L);
+    }
 }

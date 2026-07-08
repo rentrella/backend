@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/umbrella")
 @RequiredArgsConstructor
@@ -21,7 +19,7 @@ public class UmbrellaController {
 
     @GetMapping
     public ResponseEntity<?> getAvailableUmbrellas() {
-        throw new UnsupportedOperationException();
+        return ResponseEntity.ok(umbrellaService.getAvailableCount());
     }
 
     @PostMapping("/Rental")
@@ -30,8 +28,8 @@ public class UmbrellaController {
     }
 
     @PostMapping("/return")
-    public ResponseEntity<?> returnUmbrella(@RequestBody Map<String, Object> request) {
-        throw new UnsupportedOperationException();
+    public ResponseEntity<?> returnUmbrella(@RequestBody RentRequest request) {
+        return ResponseEntity.ok(umbrellaService.returnUmbrella(request.deviceId()));
     }
 
     @GetMapping("/me")

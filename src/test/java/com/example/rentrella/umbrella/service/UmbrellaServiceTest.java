@@ -3,6 +3,7 @@ package com.example.rentrella.umbrella.service;
 import com.example.rentrella.device.entity.CommandStatus;
 import com.example.rentrella.device.entity.DeviceCommand;
 import com.example.rentrella.device.repository.DeviceCommandRepository;
+import com.example.rentrella.umbrella.dto.AvailableCountResponse;
 import com.example.rentrella.umbrella.dto.RentResponse;
 import com.example.rentrella.umbrella.entity.Umbrella;
 import com.example.rentrella.umbrella.entity.UmbrellaStatus;
@@ -68,6 +69,54 @@ class UmbrellaServiceTest {
         given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.of(umbrella));
 
         assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(umbrellaRepository, never()).save(any());
+        verify(deviceCommandRepository, never()).save(any());
+    }
+
+    @Test
+    void 대여_가능한_우산_수를_반환한다() {
+        given(umbrellaRepository.countByStatus(UmbrellaStatus.AVAILABLE)).willReturn(3L);
+
+        AvailableCountResponse response = umbrellaService.getAvailableCount();
+
+        assertThat(response).isEqualTo(new AvailableCountResponse(3L));
+    }
+
+    @Test
+    void 대여중인_우산이면_반납시_상태를_AVAILABLE로_바꾸고_대기_명령을_생성한다() {
+        Umbrella umbrella = new Umbrella(1L, UmbrellaStatus.RENTED);
+        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.of(umbrella));
+
+        RentResponse response = umbrellaService.returnUmbrella(1L);
+
+        assertThat(umbrella.getStatus()).isEqualTo(UmbrellaStatus.AVAILABLE);
+        assertThat(response).isEqualTo(RentResponse.accepted());
+        verify(umbrellaRepository).save(umbrella);
+
+        ArgumentCaptor<DeviceCommand> captor = ArgumentCaptor.forClass(DeviceCommand.class);
+        verify(deviceCommandRepository).save(captor.capture());
+        assertThat(captor.getValue().getDeviceId()).isEqualTo(1L);
+        assertThat(captor.getValue().getStatus()).isEqualTo(CommandStatus.PENDING);
+    }
+
+    @Test
+    void 반납_대상_deviceId가_존재하지_않으면_예외를_던진다() {
+        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> umbrellaService.returnUmbrella(1L))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(deviceCommandRepository, never()).save(any());
+    }
+
+    @Test
+    void 대여중이_아니면_반납시_예외를_던지고_아무것도_저장하지_않는다() {
+        Umbrella umbrella = new Umbrella(1L, UmbrellaStatus.AVAILABLE);
+        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.of(umbrella));
+
+        assertThatThrownBy(() -> umbrellaService.returnUmbrella(1L))
                 .isInstanceOf(IllegalStateException.class);
 
         verify(umbrellaRepository, never()).save(any());
