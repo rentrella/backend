@@ -1,7 +1,7 @@
 package com.example.rentrella.device.service;
 
-import com.example.rentrella.device.dto.CompleteCommandResponse;
-import com.example.rentrella.device.dto.PollResponse;
+import com.example.rentrella.device.dto.response.CompleteCommandResponse;
+import com.example.rentrella.device.dto.response.PollResponse;
 import com.example.rentrella.device.entity.CommandStatus;
 import com.example.rentrella.device.entity.DeviceCommand;
 import com.example.rentrella.device.repository.DeviceCommandRepository;

@@ -1,4 +1,4 @@
-package com.example.rentrella.device.dto;
+package com.example.rentrella.device.dto.response;
 
 import com.example.rentrella.device.entity.DeviceCommand;
 

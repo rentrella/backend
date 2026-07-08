@@ -1,6 +1,6 @@
 package com.example.rentrella.umbrella.controller;
 
-import com.example.rentrella.umbrella.dto.RentRequest;
+import com.example.rentrella.umbrella.dto.request.RentRequest;
 import com.example.rentrella.umbrella.service.UmbrellaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

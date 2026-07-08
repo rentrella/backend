@@ -1,4 +1,4 @@
-package com.example.rentrella.umbrella.dto;
+package com.example.rentrella.umbrella.dto.response;
 
 public record RentResponse(String status, String msg) {
 

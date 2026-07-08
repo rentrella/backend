@@ -1,7 +1,7 @@
 package com.example.rentrella.device.controller;
 
-import com.example.rentrella.device.dto.CompleteCommandResponse;
-import com.example.rentrella.device.dto.PollResponse;
+import com.example.rentrella.device.dto.response.CompleteCommandResponse;
+import com.example.rentrella.device.dto.response.PollResponse;
 import com.example.rentrella.device.service.DeviceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

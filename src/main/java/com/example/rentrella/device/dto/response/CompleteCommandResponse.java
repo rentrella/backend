@@ -1,4 +1,4 @@
-package com.example.rentrella.device.dto;
+package com.example.rentrella.device.dto.response;
 
 public record CompleteCommandResponse(String status, String msg) {
 

@@ -1,8 +1,8 @@
 package com.example.rentrella.umbrella.controller;
 
-import com.example.rentrella.umbrella.dto.AvailableCountResponse;
-import com.example.rentrella.umbrella.dto.MyRentalResponse;
-import com.example.rentrella.umbrella.dto.RentResponse;
+import com.example.rentrella.umbrella.dto.response.AvailableCountResponse;
+import com.example.rentrella.umbrella.dto.response.MyRentalResponse;
+import com.example.rentrella.umbrella.dto.response.RentResponse;
 import com.example.rentrella.umbrella.service.UmbrellaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
