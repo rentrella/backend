@@ -33,4 +33,8 @@ public class Device {
     public void returnRental() {
         this.isBorrowed = false;
     }
+
+    public void lock() {
+        this.isLocked = true;
+    }
 }
