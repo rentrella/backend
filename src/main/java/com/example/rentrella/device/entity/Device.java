@@ -29,4 +29,8 @@ public class Device {
     public void borrow() {
         this.isBorrowed = true;
     }
+
+    public void returnRental() {
+        this.isBorrowed = false;
+    }
 }

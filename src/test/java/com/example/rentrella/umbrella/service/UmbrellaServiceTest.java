@@ -1,19 +1,23 @@
 package com.example.rentrella.umbrella.service;
 
 import com.example.rentrella.device.entity.CommandStatus;
+import com.example.rentrella.device.entity.Device;
 import com.example.rentrella.device.entity.DeviceCommand;
 import com.example.rentrella.device.repository.DeviceCommandRepository;
+import com.example.rentrella.device.repository.DeviceRepository;
 import com.example.rentrella.umbrella.dto.AvailableCountResponse;
+import com.example.rentrella.umbrella.dto.MyRentalResponse;
 import com.example.rentrella.umbrella.dto.RentResponse;
-import com.example.rentrella.umbrella.entity.Umbrella;
-import com.example.rentrella.umbrella.entity.UmbrellaStatus;
-import com.example.rentrella.umbrella.repository.UmbrellaRepository;
+import com.example.rentrella.umbrella.entity.RentalLog;
+import com.example.rentrella.umbrella.entity.RentalStatus;
+import com.example.rentrella.umbrella.repository.RentalLogRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -28,56 +32,28 @@ import static org.mockito.Mockito.verify;
 class UmbrellaServiceTest {
 
     @Mock
-    private UmbrellaRepository umbrellaRepository;
+    private DeviceRepository deviceRepository;
 
     @Mock
     private DeviceCommandRepository deviceCommandRepository;
 
+    @Mock
+    private RentalLogRepository rentalLogRepository;
+
     @InjectMocks
     private UmbrellaService umbrellaService;
 
-    @Test
-    void 대여_가능한_우산이면_상태를_RENTED로_바꾸고_대기_명령을_생성한다() {
-        Umbrella umbrella = new Umbrella(1L, UmbrellaStatus.AVAILABLE);
-        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.of(umbrella));
-
-        RentResponse response = umbrellaService.rentUmbrella(1L);
-
-        assertThat(umbrella.getStatus()).isEqualTo(UmbrellaStatus.RENTED);
-        assertThat(response).isEqualTo(RentResponse.accepted());
-        verify(umbrellaRepository).save(umbrella);
-
-        ArgumentCaptor<DeviceCommand> captor = ArgumentCaptor.forClass(DeviceCommand.class);
-        verify(deviceCommandRepository).save(captor.capture());
-        assertThat(captor.getValue().getDeviceId()).isEqualTo(1L);
-        assertThat(captor.getValue().getStatus()).isEqualTo(CommandStatus.PENDING);
-    }
-
-    @Test
-    void 존재하지_않는_deviceId면_예외를_던진다() {
-        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.empty());
-
-        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
-                .isInstanceOf(IllegalArgumentException.class);
-
-        verify(deviceCommandRepository, never()).save(any());
-    }
-
-    @Test
-    void 이미_대여중이면_예외를_던지고_아무것도_저장하지_않는다() {
-        Umbrella umbrella = new Umbrella(1L, UmbrellaStatus.RENTED);
-        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.of(umbrella));
-
-        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
-                .isInstanceOf(IllegalStateException.class);
-
-        verify(umbrellaRepository, never()).save(any());
-        verify(deviceCommandRepository, never()).save(any());
+    private Device newDevice(boolean locked, boolean borrowed) {
+        Device device = new Device();
+        ReflectionTestUtils.setField(device, "deviceId", 1L);
+        ReflectionTestUtils.setField(device, "isLocked", locked);
+        ReflectionTestUtils.setField(device, "isBorrowed", borrowed);
+        return device;
     }
 
     @Test
     void 대여_가능한_우산_수를_반환한다() {
-        given(umbrellaRepository.countByStatus(UmbrellaStatus.AVAILABLE)).willReturn(3L);
+        given(deviceRepository.countByIsLockedFalseAndIsBorrowedFalse()).willReturn(3L);
 
         AvailableCountResponse response = umbrellaService.getAvailableCount();
 
@@ -85,41 +61,132 @@ class UmbrellaServiceTest {
     }
 
     @Test
-    void 대여중인_우산이면_반납시_상태를_AVAILABLE로_바꾸고_대기_명령을_생성한다() {
-        Umbrella umbrella = new Umbrella(1L, UmbrellaStatus.RENTED);
-        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.of(umbrella));
+    void 대여_가능한_우산이면_is_borrowed를_true로_바꾸고_명령과_로그를_생성한다() {
+        Device device = newDevice(false, false);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+
+        RentResponse response = umbrellaService.rentUmbrella(1L);
+
+        assertThat(device.isBorrowed()).isTrue();
+        assertThat(response).isEqualTo(RentResponse.accepted());
+        verify(deviceRepository).save(device);
+
+        ArgumentCaptor<DeviceCommand> commandCaptor = ArgumentCaptor.forClass(DeviceCommand.class);
+        verify(deviceCommandRepository).save(commandCaptor.capture());
+        assertThat(commandCaptor.getValue().getDeviceId()).isEqualTo(1L);
+        assertThat(commandCaptor.getValue().getStatus()).isEqualTo(CommandStatus.PENDING);
+
+        ArgumentCaptor<RentalLog> logCaptor = ArgumentCaptor.forClass(RentalLog.class);
+        verify(rentalLogRepository).save(logCaptor.capture());
+        assertThat(logCaptor.getValue().getDeviceId()).isEqualTo(1L);
+        assertThat(logCaptor.getValue().getStatus()).isEqualTo(RentalStatus.BORROW);
+    }
+
+    @Test
+    void 존재하지_않는_deviceId면_예외를_던진다() {
+        given(deviceRepository.findById(1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(deviceCommandRepository, never()).save(any());
+        verify(rentalLogRepository, never()).save(any());
+    }
+
+    @Test
+    void 이미_대여중이면_예외를_던지고_아무것도_저장하지_않는다() {
+        Device device = newDevice(false, true);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+
+        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(deviceRepository, never()).save(any());
+        verify(deviceCommandRepository, never()).save(any());
+        verify(rentalLogRepository, never()).save(any());
+    }
+
+    @Test
+    void 잠긴_우산이면_대여시_예외를_던진다() {
+        Device device = newDevice(true, false);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+
+        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(deviceRepository, never()).save(any());
+    }
+
+    @Test
+    void 대여중인_우산이면_반납시_is_borrowed를_false로_바꾸고_명령과_로그를_생성한다() {
+        Device device = newDevice(false, true);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
 
         RentResponse response = umbrellaService.returnUmbrella(1L);
 
-        assertThat(umbrella.getStatus()).isEqualTo(UmbrellaStatus.AVAILABLE);
+        assertThat(device.isBorrowed()).isFalse();
         assertThat(response).isEqualTo(RentResponse.accepted());
-        verify(umbrellaRepository).save(umbrella);
+        verify(deviceRepository).save(device);
 
-        ArgumentCaptor<DeviceCommand> captor = ArgumentCaptor.forClass(DeviceCommand.class);
-        verify(deviceCommandRepository).save(captor.capture());
-        assertThat(captor.getValue().getDeviceId()).isEqualTo(1L);
-        assertThat(captor.getValue().getStatus()).isEqualTo(CommandStatus.PENDING);
+        ArgumentCaptor<DeviceCommand> commandCaptor = ArgumentCaptor.forClass(DeviceCommand.class);
+        verify(deviceCommandRepository).save(commandCaptor.capture());
+        assertThat(commandCaptor.getValue().getStatus()).isEqualTo(CommandStatus.PENDING);
+
+        ArgumentCaptor<RentalLog> logCaptor = ArgumentCaptor.forClass(RentalLog.class);
+        verify(rentalLogRepository).save(logCaptor.capture());
+        assertThat(logCaptor.getValue().getStatus()).isEqualTo(RentalStatus.RETURN);
     }
 
     @Test
     void 반납_대상_deviceId가_존재하지_않으면_예외를_던진다() {
-        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.empty());
+        given(deviceRepository.findById(1L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> umbrellaService.returnUmbrella(1L))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(deviceCommandRepository, never()).save(any());
+        verify(rentalLogRepository, never()).save(any());
     }
 
     @Test
     void 대여중이_아니면_반납시_예외를_던지고_아무것도_저장하지_않는다() {
-        Umbrella umbrella = new Umbrella(1L, UmbrellaStatus.AVAILABLE);
-        given(umbrellaRepository.findByDeviceId(1L)).willReturn(Optional.of(umbrella));
+        Device device = newDevice(false, false);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
 
         assertThatThrownBy(() -> umbrellaService.returnUmbrella(1L))
                 .isInstanceOf(IllegalStateException.class);
 
-        verify(umbrellaRepository, never()).save(any());
+        verify(deviceRepository, never()).save(any());
         verify(deviceCommandRepository, never()).save(any());
+        verify(rentalLogRepository, never()).save(any());
+    }
+
+    @Test
+    void 최근_로그가_BORROW이면_대여중인_deviceId를_반환한다() {
+        RentalLog log = new RentalLog(1L, 5L, RentalStatus.BORROW);
+        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(1L)).willReturn(Optional.of(log));
+
+        MyRentalResponse response = umbrellaService.getMyRentedUmbrella();
+
+        assertThat(response).isEqualTo(MyRentalResponse.of(5L));
+    }
+
+    @Test
+    void 최근_로그가_RETURN이면_대여중이_아니다() {
+        RentalLog log = new RentalLog(1L, 5L, RentalStatus.RETURN);
+        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(1L)).willReturn(Optional.of(log));
+
+        MyRentalResponse response = umbrellaService.getMyRentedUmbrella();
+
+        assertThat(response).isEqualTo(MyRentalResponse.none());
+    }
+
+    @Test
+    void 로그가_없으면_대여중이_아니다() {
+        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(1L)).willReturn(Optional.empty());
+
+        MyRentalResponse response = umbrellaService.getMyRentedUmbrella();
+
+        assertThat(response).isEqualTo(MyRentalResponse.none());
     }
 }

@@ -34,6 +34,6 @@ public class UmbrellaController {
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyRentedUmbrella() {
-        throw new UnsupportedOperationException();
+        return ResponseEntity.ok(umbrellaService.getMyRentedUmbrella());
     }
 }

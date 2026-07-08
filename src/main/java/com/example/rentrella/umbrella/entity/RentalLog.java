@@ -14,36 +14,28 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "umbrella")
+@Table(name = "rental_logs")
 @Getter
 @NoArgsConstructor
-public class Umbrella {
+public class RentalLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long logId;
+
+    private Long userId;
 
     private Long deviceId;
 
     @Enumerated(EnumType.STRING)
-    private UmbrellaStatus status;
+    private RentalStatus status;
 
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
-
-    public Umbrella(Long deviceId, UmbrellaStatus status) {
+    public RentalLog(Long userId, Long deviceId, RentalStatus status) {
+        this.userId = userId;
         this.deviceId = deviceId;
         this.status = status;
-    }
-
-    public void rent() {
-        this.status = UmbrellaStatus.RENTED;
-    }
-
-    public void returnRental() {
-        this.status = UmbrellaStatus.AVAILABLE;
     }
 }

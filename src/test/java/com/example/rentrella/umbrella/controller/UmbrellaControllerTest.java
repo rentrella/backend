@@ -1,6 +1,7 @@
 package com.example.rentrella.umbrella.controller;
 
 import com.example.rentrella.umbrella.dto.AvailableCountResponse;
+import com.example.rentrella.umbrella.dto.MyRentalResponse;
 import com.example.rentrella.umbrella.dto.RentResponse;
 import com.example.rentrella.umbrella.service.UmbrellaService;
 import org.junit.jupiter.api.Test;
@@ -56,5 +57,23 @@ class UmbrellaControllerTest {
                         .content("{\"deviceId\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"status\":\"success\",\"msg\":\"명령 접수됨\"}"));
+    }
+
+    @Test
+    void 대여중인_우산이_있으면_deviceId를_반환한다() throws Exception {
+        given(umbrellaService.getMyRentedUmbrella()).willReturn(MyRentalResponse.of(5L));
+
+        mockMvc.perform(get("/umbrella/me"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"hasRental\":true,\"deviceId\":5}"));
+    }
+
+    @Test
+    void 대여중인_우산이_없으면_hasRental_false를_반환한다() throws Exception {
+        given(umbrellaService.getMyRentedUmbrella()).willReturn(MyRentalResponse.none());
+
+        mockMvc.perform(get("/umbrella/me"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"hasRental\":false,\"deviceId\":null}"));
     }
 }
