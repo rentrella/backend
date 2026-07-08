@@ -33,7 +33,7 @@ public class AdminController {
 
     @GetMapping("/umbrella")
     public ResponseEntity<?> getUmbrellaRentalLogs() {
-        throw new UnsupportedOperationException();
+        return ResponseEntity.ok(adminService.getRentalLogs());
     }
 
     @PatchMapping("/lock/umbrella")

@@ -1,6 +1,7 @@
 package com.example.rentrella.admin.service;
 
 import com.example.rentrella.admin.dto.response.AdminActionResponse;
+import com.example.rentrella.admin.dto.response.RentalLogResponse;
 import com.example.rentrella.admin.entity.UserBan;
 import com.example.rentrella.admin.repository.UserBanRepository;
 import com.example.rentrella.device.entity.CommandStatus;
@@ -8,6 +9,9 @@ import com.example.rentrella.device.entity.Device;
 import com.example.rentrella.device.entity.DeviceCommand;
 import com.example.rentrella.device.repository.DeviceCommandRepository;
 import com.example.rentrella.device.repository.DeviceRepository;
+import com.example.rentrella.umbrella.entity.RentalLog;
+import com.example.rentrella.umbrella.entity.RentalStatus;
+import com.example.rentrella.umbrella.repository.RentalLogRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +39,9 @@ class AdminServiceTest {
 
     @Mock
     private DeviceCommandRepository deviceCommandRepository;
+
+    @Mock
+    private RentalLogRepository rentalLogRepository;
 
     @Mock
     private UserBanRepository userBanRepository;
@@ -112,5 +120,15 @@ class AdminServiceTest {
 
         verify(userBanRepository).save(existing);
         assertThat(existing.getBannedUntil()).isAfter(LocalDateTime.now().plusDays(6));
+    }
+
+    @Test
+    void 대여_반납_로그를_최신순으로_조회한다() {
+        RentalLog log = new RentalLog(1L, 5L, RentalStatus.BORROW);
+        given(rentalLogRepository.findAllByOrderByLogIdDesc()).willReturn(List.of(log));
+
+        List<RentalLogResponse> responses = adminService.getRentalLogs();
+
+        assertThat(responses).containsExactly(RentalLogResponse.of(log));
     }
 }

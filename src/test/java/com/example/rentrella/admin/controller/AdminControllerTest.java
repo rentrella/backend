@@ -1,7 +1,9 @@
 package com.example.rentrella.admin.controller;
 
 import com.example.rentrella.admin.dto.response.AdminActionResponse;
+import com.example.rentrella.admin.dto.response.RentalLogResponse;
 import com.example.rentrella.admin.service.AdminService;
+import com.example.rentrella.umbrella.entity.RentalStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -10,7 +12,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,5 +60,14 @@ class AdminControllerTest {
                         .content("{\"userId\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"status\":\"success\",\"msg\":\"대여 금지 처리 완료\"}"));
+    }
+
+    @Test
+    void 대여_반납_로그를_조회한다() throws Exception {
+        RentalLogResponse log = new RentalLogResponse(1L, 1L, 5L, RentalStatus.BORROW.name(), LocalDateTime.now());
+        given(adminService.getRentalLogs()).willReturn(List.of(log));
+
+        mockMvc.perform(get("/admin/umbrella"))
+                .andExpect(status().isOk());
     }
 }

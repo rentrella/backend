@@ -31,4 +31,14 @@ class RentalLogRepositoryTest {
     void 로그가_없는_사용자는_빈_값을_반환한다() {
         assertThat(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(999L)).isEmpty();
     }
+
+    @Test
+    void 모든_로그를_최신순으로_조회한다() {
+        RentalLog first = rentalLogRepository.save(new RentalLog(1L, 5L, RentalStatus.BORROW));
+        RentalLog second = rentalLogRepository.save(new RentalLog(1L, 5L, RentalStatus.RETURN));
+
+        assertThat(rentalLogRepository.findAllByOrderByLogIdDesc())
+                .extracting(RentalLog::getLogId)
+                .containsExactly(second.getLogId(), first.getLogId());
+    }
 }

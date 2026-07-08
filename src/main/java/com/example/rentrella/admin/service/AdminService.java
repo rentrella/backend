@@ -1,6 +1,7 @@
 package com.example.rentrella.admin.service;
 
 import com.example.rentrella.admin.dto.response.AdminActionResponse;
+import com.example.rentrella.admin.dto.response.RentalLogResponse;
 import com.example.rentrella.admin.entity.UserBan;
 import com.example.rentrella.admin.repository.UserBanRepository;
 import com.example.rentrella.device.entity.CommandStatus;
@@ -8,11 +9,13 @@ import com.example.rentrella.device.entity.Device;
 import com.example.rentrella.device.entity.DeviceCommand;
 import com.example.rentrella.device.repository.DeviceCommandRepository;
 import com.example.rentrella.device.repository.DeviceRepository;
+import com.example.rentrella.umbrella.repository.RentalLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class AdminService {
 
     private final DeviceRepository deviceRepository;
     private final DeviceCommandRepository deviceCommandRepository;
+    private final RentalLogRepository rentalLogRepository;
     private final UserBanRepository userBanRepository;
 
     @Transactional
@@ -55,5 +59,11 @@ public class AdminService {
         userBanRepository.save(userBan);
 
         return AdminActionResponse.of("대여 금지 처리 완료");
+    }
+
+    public List<RentalLogResponse> getRentalLogs() {
+        return rentalLogRepository.findAllByOrderByLogIdDesc().stream()
+                .map(RentalLogResponse::of)
+                .toList();
     }
 }
