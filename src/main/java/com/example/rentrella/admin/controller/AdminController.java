@@ -1,6 +1,7 @@
 package com.example.rentrella.admin.controller;
 
 import com.example.rentrella.admin.dto.request.LockUmbrellaRequest;
+import com.example.rentrella.admin.dto.request.LockUserRequest;
 import com.example.rentrella.admin.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +42,8 @@ public class AdminController {
     }
 
     @PatchMapping("/lock/user")
-    public ResponseEntity<?> lockUser(@RequestBody Map<String, Object> request) {
-        throw new UnsupportedOperationException();
+    public ResponseEntity<?> lockUser(@RequestBody LockUserRequest request) {
+        return ResponseEntity.ok(adminService.lockUser(request.userId()));
     }
 
     @PatchMapping("/open")

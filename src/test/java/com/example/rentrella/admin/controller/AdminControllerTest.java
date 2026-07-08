@@ -44,4 +44,15 @@ class AdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"status\":\"success\",\"msg\":\"명령 접수됨\"}"));
     }
+
+    @Test
+    void 유저_대여_금지를_요청하면_success_응답을_반환한다() throws Exception {
+        given(adminService.lockUser(1L)).willReturn(AdminActionResponse.of("대여 금지 처리 완료"));
+
+        mockMvc.perform(patch("/admin/lock/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":1}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"status\":\"success\",\"msg\":\"대여 금지 처리 완료\"}"));
+    }
 }
