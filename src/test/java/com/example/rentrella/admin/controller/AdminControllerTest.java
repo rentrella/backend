@@ -35,4 +35,13 @@ class AdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"status\":\"success\",\"msg\":\"우산 꽂이 잠금 완료\"}"));
     }
+
+    @Test
+    void 우산_꽂이_열기를_요청하면_success_응답을_반환한다() throws Exception {
+        given(adminService.openUmbrellaSlot(1L)).willReturn(AdminActionResponse.of("명령 접수됨"));
+
+        mockMvc.perform(patch("/admin/open").param("deviceId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"status\":\"success\",\"msg\":\"명령 접수됨\"}"));
+    }
 }

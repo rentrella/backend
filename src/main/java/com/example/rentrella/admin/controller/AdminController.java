@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -45,7 +46,7 @@ public class AdminController {
     }
 
     @PatchMapping("/open")
-    public ResponseEntity<?> openUmbrellaSlot(@RequestBody Map<String, Object> request) {
-        throw new UnsupportedOperationException();
+    public ResponseEntity<?> openUmbrellaSlot(@RequestParam Long deviceId) {
+        return ResponseEntity.ok(adminService.openUmbrellaSlot(deviceId));
     }
 }
