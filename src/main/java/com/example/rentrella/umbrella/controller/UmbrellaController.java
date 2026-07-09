@@ -1,5 +1,8 @@
-package com.example.rentrella.umbrella;
+package com.example.rentrella.umbrella.controller;
 
+import com.example.rentrella.umbrella.dto.RentRequest;
+import com.example.rentrella.umbrella.service.UmbrellaService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,7 +14,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/umbrella")
+@RequiredArgsConstructor
 public class UmbrellaController {
+
+    private final UmbrellaService umbrellaService;
 
     @GetMapping
     public ResponseEntity<?> getAvailableUmbrellas() {
@@ -19,8 +25,8 @@ public class UmbrellaController {
     }
 
     @PostMapping("/Rental")
-    public ResponseEntity<?> rentUmbrella(@RequestBody Map<String, Object> request) {
-        throw new UnsupportedOperationException();
+    public ResponseEntity<?> rentUmbrella(@RequestBody RentRequest request) {
+        return ResponseEntity.ok(umbrellaService.rentUmbrella(request.deviceId()));
     }
 
     @PostMapping("/return")
