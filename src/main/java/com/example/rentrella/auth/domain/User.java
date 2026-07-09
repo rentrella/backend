@@ -13,6 +13,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -36,8 +38,8 @@ public class User {
     @Column(name = "student_number", length = 20)
     private String studentNumber;
 
-    @Column(name = "is_banned", nullable = false)
-    private boolean banned;
+    @Column(name = "end_banned")
+    private LocalDate endBanned;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -64,7 +66,6 @@ public class User {
         this.studentNumber = studentNumber;
         this.dataGsmId = dataGsmId;
         this.role = role == null ? UserRole.USER : role;
-        this.banned = false;
         this.hasBorrowedUmbrella = false;
     }
 

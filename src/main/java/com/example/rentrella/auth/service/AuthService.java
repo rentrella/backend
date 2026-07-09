@@ -57,10 +57,6 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new AuthException(HttpStatus.UNAUTHORIZED, "Invalid email or password."));
 
-        if (user.isBanned()) {
-            throw new AuthException(HttpStatus.FORBIDDEN, "This account is banned.");
-        }
-
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new AuthException(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
         }
