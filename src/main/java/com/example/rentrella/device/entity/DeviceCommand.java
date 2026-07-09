@@ -42,4 +42,8 @@ public class DeviceCommand {
     public void complete() {
         this.status = CommandStatus.DONE;
     }
+
+    public void cancel() {
+        this.status = CommandStatus.CANCELLED;
+    }
 }

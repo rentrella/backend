@@ -44,6 +44,10 @@ public class AdminService {
         deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 우산 꽂이입니다. deviceId=" + deviceId));
 
+        List<DeviceCommand> pendingCommands = deviceCommandRepository.findAllByDeviceIdAndStatus(deviceId, CommandStatus.PENDING);
+        pendingCommands.forEach(DeviceCommand::cancel);
+        deviceCommandRepository.saveAll(pendingCommands);
+
         deviceCommandRepository.save(new DeviceCommand(deviceId, CommandStatus.PENDING));
 
         return AdminActionResponse.of("명령 접수됨");

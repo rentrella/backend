@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UmbrellaService {
@@ -41,6 +43,7 @@ public class UmbrellaService {
 
         device.borrow();
         deviceRepository.save(device);
+        cancelPendingCommands(deviceId);
         deviceCommandRepository.save(new DeviceCommand(deviceId, CommandStatus.PENDING));
         rentalLogRepository.save(new RentalLog(TEMP_USER_ID, deviceId, RentalStatus.BORROW));
 
@@ -58,6 +61,7 @@ public class UmbrellaService {
 
         device.returnRental();
         deviceRepository.save(device);
+        cancelPendingCommands(deviceId);
         deviceCommandRepository.save(new DeviceCommand(deviceId, CommandStatus.PENDING));
         rentalLogRepository.save(new RentalLog(TEMP_USER_ID, deviceId, RentalStatus.RETURN));
 
@@ -69,5 +73,11 @@ public class UmbrellaService {
                 .filter(log -> log.getStatus() == RentalStatus.BORROW)
                 .map(log -> MyRentalResponse.of(log.getDeviceId()))
                 .orElseGet(MyRentalResponse::none);
+    }
+
+    private void cancelPendingCommands(Long deviceId) {
+        List<DeviceCommand> pendingCommands = deviceCommandRepository.findAllByDeviceIdAndStatus(deviceId, CommandStatus.PENDING);
+        pendingCommands.forEach(DeviceCommand::cancel);
+        deviceCommandRepository.saveAll(pendingCommands);
     }
 }

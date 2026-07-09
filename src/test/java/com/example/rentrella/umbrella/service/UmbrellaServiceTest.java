@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -135,6 +136,21 @@ class UmbrellaServiceTest {
         ArgumentCaptor<RentalLog> logCaptor = ArgumentCaptor.forClass(RentalLog.class);
         verify(rentalLogRepository).save(logCaptor.capture());
         assertThat(logCaptor.getValue().getStatus()).isEqualTo(RentalStatus.RETURN);
+    }
+
+    @Test
+    void 대여시_기존에_대기중이던_명령이_있으면_취소한다() {
+        Device device = newDevice(false, false);
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
+
+        DeviceCommand stalePending = new DeviceCommand(1L, CommandStatus.PENDING);
+        given(deviceCommandRepository.findAllByDeviceIdAndStatus(1L, CommandStatus.PENDING))
+                .willReturn(List.of(stalePending));
+
+        umbrellaService.rentUmbrella(1L);
+
+        assertThat(stalePending.getStatus()).isEqualTo(CommandStatus.CANCELLED);
+        verify(deviceCommandRepository).saveAll(List.of(stalePending));
     }
 
     @Test

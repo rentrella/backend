@@ -89,6 +89,20 @@ class AdminServiceTest {
     }
 
     @Test
+    void 우산_꽂이를_열때_기존에_대기중이던_명령이_있으면_취소한다() {
+        given(deviceRepository.findById(1L)).willReturn(Optional.of(newDevice()));
+
+        DeviceCommand stalePending = new DeviceCommand(1L, CommandStatus.PENDING);
+        given(deviceCommandRepository.findAllByDeviceIdAndStatus(1L, CommandStatus.PENDING))
+                .willReturn(List.of(stalePending));
+
+        adminService.openUmbrellaSlot(1L);
+
+        assertThat(stalePending.getStatus()).isEqualTo(CommandStatus.CANCELLED);
+        verify(deviceCommandRepository).saveAll(List.of(stalePending));
+    }
+
+    @Test
     void 존재하지_않는_우산_꽂이를_열면_예외를_던지고_명령을_생성하지_않는다() {
         given(deviceRepository.findById(1L)).willReturn(Optional.empty());
 
