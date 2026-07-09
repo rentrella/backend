@@ -4,7 +4,6 @@ import com.example.rentrella.auth.domain.EmailVerificationCode;
 import com.example.rentrella.auth.domain.EmailVerificationPurpose;
 import com.example.rentrella.auth.domain.RefreshToken;
 import com.example.rentrella.auth.domain.User;
-import com.example.rentrella.auth.domain.UserRole;
 import com.example.rentrella.auth.dto.EmailCodeRequest;
 import com.example.rentrella.auth.dto.LoginRequest;
 import com.example.rentrella.auth.dto.LogoutRequest;
@@ -27,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -43,6 +43,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final EmailCodeSender emailCodeSender;
+    private final DataGsmStudentSyncService dataGsmStudentSyncService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.auth.email-code-validity-minutes}")
@@ -69,21 +70,20 @@ public class AuthService {
 
     @Transactional
     public SignupResponse signup(SignupRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+        verifyEmailCode(request.email(), request.verificationCode(), EmailVerificationPurpose.SIGNUP);
+
+        User user = userRepository.findByEmail(request.email())
+                .orElseGet(() -> dataGsmStudentSyncService.syncStudentByEmail(request.email()));
+
+        if (user == null) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Student information was not found.");
+        }
+
+        if (StringUtils.hasText(user.getPassword())) {
             throw new AuthException(HttpStatus.CONFLICT, "Email already exists.");
         }
 
-        verifyEmailCode(request.email(), request.verificationCode(), EmailVerificationPurpose.SIGNUP);
-
-        User user = User.builder()
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .name(request.name())
-                .studentNumber(request.studentNumber())
-                .dataGsmId(request.dataGsmId())
-                .role(UserRole.USER)
-                .build();
-
+        user.register(passwordEncoder.encode(request.password()));
         User savedUser = userRepository.save(user);
         return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getName());
     }
@@ -118,7 +118,10 @@ public class AuthService {
 
     @Transactional
     public void sendSignupCode(EmailCodeRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.findByEmail(request.email())
+                .map(User::getPassword)
+                .filter(StringUtils::hasText)
+                .isPresent()) {
             throw new AuthException(HttpStatus.CONFLICT, "Email already exists.");
         }
 

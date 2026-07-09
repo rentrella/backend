@@ -27,7 +27,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(length = 255)
     private String password;
 
     @Column(nullable = false, length = 50)
@@ -43,8 +43,15 @@ public class User {
     @Column(nullable = false, length = 10)
     private UserRole role;
 
-    @Column(name = "data_gsm_id", length = 100)
+    @Column(name = "data_gsm_id", unique = true, length = 100)
     private String dataGsmId;
+
+    private Integer grade;
+
+    @Column(name = "class_number")
+    private Integer classNumber;
+
+    private Integer number;
 
     @Column(name = "has_borrowed_umbrella", nullable = false)
     private boolean hasBorrowedUmbrella;
@@ -63,5 +70,33 @@ public class User {
 
     public void changePassword(String password) {
         this.password = password;
+    }
+
+    public static User newDataGsmStudent() {
+        User user = new User();
+        user.role = UserRole.USER;
+        return user;
+    }
+
+    public void synchronizeStudentProfile(
+            String dataGsmId,
+            String name,
+            String email,
+            String studentNumber,
+            Integer grade,
+            Integer classNumber,
+            Integer number
+    ) {
+        this.dataGsmId = dataGsmId;
+        this.name = name;
+        this.email = email;
+        this.studentNumber = studentNumber;
+        this.grade = grade;
+        this.classNumber = classNumber;
+        this.number = number;
+    }
+
+    public void register(String encodedPassword) {
+        this.password = encodedPassword;
     }
 }
