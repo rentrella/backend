@@ -36,7 +36,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/email/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/password/reset").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/admin/students/sync").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
