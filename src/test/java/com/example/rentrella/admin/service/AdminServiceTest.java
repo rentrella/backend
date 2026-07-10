@@ -2,6 +2,9 @@ package com.example.rentrella.admin.service;
 
 import com.example.rentrella.admin.dto.response.AdminActionResponse;
 import com.example.rentrella.admin.dto.response.RentalLogResponse;
+import com.example.rentrella.auth.domain.User;
+import com.example.rentrella.auth.domain.UserRole;
+import com.example.rentrella.auth.repository.UserRepository;
 import com.example.rentrella.device.entity.CommandStatus;
 import com.example.rentrella.device.entity.Device;
 import com.example.rentrella.device.entity.DeviceCommand;
@@ -18,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +43,9 @@ class AdminServiceTest {
 
     @Mock
     private RentalLogRepository rentalLogRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private AdminService adminService;
@@ -107,9 +114,25 @@ class AdminServiceTest {
     }
 
     @Test
-    void 유저_대여_금지는_아직_구현되지_않았다() {
+    void 존재하는_유저를_대여_금지_처리한다() {
+        User user = User.builder().email("user@test.com").password("x").name("테스트유저").role(UserRole.USER).build();
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+
+        AdminActionResponse response = adminService.lockUser(1L);
+
+        assertThat(user.getEndBanned()).isEqualTo(LocalDate.now().plusDays(7));
+        verify(userRepository).save(user);
+        assertThat(response).isEqualTo(AdminActionResponse.of("대여 금지 처리 완료"));
+    }
+
+    @Test
+    void 존재하지_않는_유저를_대여_금지_처리하면_예외를_던진다() {
+        given(userRepository.findById(1L)).willReturn(Optional.empty());
+
         assertThatThrownBy(() -> adminService.lockUser(1L))
-                .isInstanceOf(UnsupportedOperationException.class);
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(userRepository, never()).save(any());
     }
 
     @Test

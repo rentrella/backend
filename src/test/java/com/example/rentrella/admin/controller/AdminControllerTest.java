@@ -3,6 +3,7 @@ package com.example.rentrella.admin.controller;
 import com.example.rentrella.admin.dto.response.AdminActionResponse;
 import com.example.rentrella.admin.dto.response.RentalLogResponse;
 import com.example.rentrella.admin.service.AdminService;
+import com.example.rentrella.auth.security.JwtTokenProvider;
 import com.example.rentrella.umbrella.entity.RentalStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ class AdminControllerTest {
 
     @MockitoBean
     private AdminService adminService;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     @Test
     void 우산_꽂이_잠금을_요청하면_success_응답을_반환한다() throws Exception {
