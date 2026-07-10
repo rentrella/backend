@@ -2,8 +2,6 @@ package com.example.rentrella.admin.service;
 
 import com.example.rentrella.admin.dto.response.AdminActionResponse;
 import com.example.rentrella.admin.dto.response.RentalLogResponse;
-import com.example.rentrella.admin.entity.UserBan;
-import com.example.rentrella.admin.repository.UserBanRepository;
 import com.example.rentrella.device.entity.CommandStatus;
 import com.example.rentrella.device.entity.Device;
 import com.example.rentrella.device.entity.DeviceCommand;
@@ -20,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,9 +39,6 @@ class AdminServiceTest {
 
     @Mock
     private RentalLogRepository rentalLogRepository;
-
-    @Mock
-    private UserBanRepository userBanRepository;
 
     @InjectMocks
     private AdminService adminService;
@@ -113,27 +107,9 @@ class AdminServiceTest {
     }
 
     @Test
-    void 처음_금지되는_유저는_새로운_금지_기록을_생성한다() {
-        given(userBanRepository.findByUserId(1L)).willReturn(Optional.empty());
-
-        AdminActionResponse response = adminService.lockUser(1L);
-
-        ArgumentCaptor<UserBan> banCaptor = ArgumentCaptor.forClass(UserBan.class);
-        verify(userBanRepository).save(banCaptor.capture());
-        assertThat(banCaptor.getValue().getUserId()).isEqualTo(1L);
-        assertThat(banCaptor.getValue().getBannedUntil()).isAfter(LocalDateTime.now().plusDays(6));
-        assertThat(response).isEqualTo(AdminActionResponse.of("대여 금지 처리 완료"));
-    }
-
-    @Test
-    void 이미_금지된_유저는_금지_기간을_연장한다() {
-        UserBan existing = new UserBan(1L, LocalDateTime.now().plusDays(1));
-        given(userBanRepository.findByUserId(1L)).willReturn(Optional.of(existing));
-
-        adminService.lockUser(1L);
-
-        verify(userBanRepository).save(existing);
-        assertThat(existing.getBannedUntil()).isAfter(LocalDateTime.now().plusDays(6));
+    void 유저_대여_금지는_아직_구현되지_않았다() {
+        assertThatThrownBy(() -> adminService.lockUser(1L))
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
