@@ -1,4 +1,4 @@
-package com.example.rentrella.device.entity;
+package com.example.rentrella.umbrella.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,36 +14,28 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "device_commands")
+@Table(name = "rental_logs")
 @Getter
 @NoArgsConstructor
-public class DeviceCommand {
+public class RentalLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long logId;
+
+    private Long userId;
 
     private Long deviceId;
 
     @Enumerated(EnumType.STRING)
-    private CommandStatus status;
+    private RentalStatus status;
 
     @Column(insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
-
-    public DeviceCommand(Long deviceId, CommandStatus status) {
+    public RentalLog(Long userId, Long deviceId, RentalStatus status) {
+        this.userId = userId;
         this.deviceId = deviceId;
         this.status = status;
-    }
-
-    public void complete() {
-        this.status = CommandStatus.DONE;
-    }
-
-    public void cancel() {
-        this.status = CommandStatus.CANCELLED;
     }
 }

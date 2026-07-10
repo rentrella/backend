@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -59,6 +60,10 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new AuthException(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
+        }
+
+        if (user.getEndBanned() != null && !user.getEndBanned().isBefore(LocalDate.now())) {
+            throw new AuthException(HttpStatus.FORBIDDEN, "This account is banned until " + user.getEndBanned() + ".");
         }
 
         return issueTokens(user);

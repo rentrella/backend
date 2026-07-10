@@ -1,6 +1,6 @@
 package com.example.rentrella.device.controller;
 
-import com.example.rentrella.device.dto.CompleteCommandRequest;
+import com.example.rentrella.device.dto.request.CompleteCommandRequest;
 import com.example.rentrella.device.service.DeviceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

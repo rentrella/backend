@@ -1,16 +1,16 @@
 package com.example.rentrella.umbrella.controller;
 
-import com.example.rentrella.umbrella.dto.RentRequest;
+import com.example.rentrella.auth.security.AuthenticatedUser;
+import com.example.rentrella.umbrella.dto.request.RentRequest;
 import com.example.rentrella.umbrella.service.UmbrellaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/umbrella")
@@ -21,21 +21,21 @@ public class UmbrellaController {
 
     @GetMapping
     public ResponseEntity<?> getAvailableUmbrellas() {
-        throw new UnsupportedOperationException();
+        return ResponseEntity.ok(umbrellaService.getAvailableCount());
     }
 
     @PostMapping("/Rental")
-    public ResponseEntity<?> rentUmbrella(@RequestBody RentRequest request) {
-        return ResponseEntity.ok(umbrellaService.rentUmbrella(request.deviceId()));
+    public ResponseEntity<?> rentUmbrella(@AuthenticationPrincipal AuthenticatedUser user, @RequestBody RentRequest request) {
+        return ResponseEntity.ok(umbrellaService.rentUmbrella(user.id(), request.deviceId()));
     }
 
     @PostMapping("/return")
-    public ResponseEntity<?> returnUmbrella(@RequestBody Map<String, Object> request) {
-        throw new UnsupportedOperationException();
+    public ResponseEntity<?> returnUmbrella(@AuthenticationPrincipal AuthenticatedUser user, @RequestBody RentRequest request) {
+        return ResponseEntity.ok(umbrellaService.returnUmbrella(user.id(), request.deviceId()));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getMyRentedUmbrella() {
-        throw new UnsupportedOperationException();
+    public ResponseEntity<?> getMyRentedUmbrella(@AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(umbrellaService.getMyRentedUmbrella(user.id()));
     }
 }
