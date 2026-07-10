@@ -1,5 +1,6 @@
 package com.example.rentrella.umbrella.controller;
 
+import com.example.rentrella.auth.security.JwtTokenProvider;
 import com.example.rentrella.umbrella.dto.RentResponse;
 import com.example.rentrella.umbrella.service.UmbrellaService;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ class UmbrellaControllerTest {
 
     @MockitoBean
     private UmbrellaService umbrellaService;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     @Test
     void 대여_요청하면_success_응답을_반환한다() throws Exception {

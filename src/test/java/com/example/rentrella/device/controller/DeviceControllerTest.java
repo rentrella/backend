@@ -1,5 +1,6 @@
 package com.example.rentrella.device.controller;
 
+import com.example.rentrella.auth.security.JwtTokenProvider;
 import com.example.rentrella.device.dto.CompleteCommandResponse;
 import com.example.rentrella.device.dto.PollResponse;
 import com.example.rentrella.device.service.DeviceService;
@@ -26,6 +27,9 @@ class DeviceControllerTest {
 
     @MockitoBean
     private DeviceService deviceService;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
 
     @Test
     void 대기중인_명령이_있으면_hasCommand_true를_반환한다() throws Exception {
