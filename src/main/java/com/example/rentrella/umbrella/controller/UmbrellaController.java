@@ -1,9 +1,11 @@
 package com.example.rentrella.umbrella.controller;
 
+import com.example.rentrella.auth.security.AuthenticatedUser;
 import com.example.rentrella.umbrella.dto.request.RentRequest;
 import com.example.rentrella.umbrella.service.UmbrellaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,17 +25,17 @@ public class UmbrellaController {
     }
 
     @PostMapping("/Rental")
-    public ResponseEntity<?> rentUmbrella(@RequestBody RentRequest request) {
-        return ResponseEntity.ok(umbrellaService.rentUmbrella(request.deviceId()));
+    public ResponseEntity<?> rentUmbrella(@AuthenticationPrincipal AuthenticatedUser user, @RequestBody RentRequest request) {
+        return ResponseEntity.ok(umbrellaService.rentUmbrella(user.id(), request.deviceId()));
     }
 
     @PostMapping("/return")
-    public ResponseEntity<?> returnUmbrella(@RequestBody RentRequest request) {
-        return ResponseEntity.ok(umbrellaService.returnUmbrella(request.deviceId()));
+    public ResponseEntity<?> returnUmbrella(@AuthenticationPrincipal AuthenticatedUser user, @RequestBody RentRequest request) {
+        return ResponseEntity.ok(umbrellaService.returnUmbrella(user.id(), request.deviceId()));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getMyRentedUmbrella() {
-        return ResponseEntity.ok(umbrellaService.getMyRentedUmbrella());
+    public ResponseEntity<?> getMyRentedUmbrella(@AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(umbrellaService.getMyRentedUmbrella(user.id()));
     }
 }

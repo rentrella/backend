@@ -21,9 +21,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UmbrellaService {
 
-    // TODO: auth 구현 후 로그인된 사용자의 실제 id로 교체
-    private static final Long TEMP_USER_ID = 1L;
-
     private final DeviceRepository deviceRepository;
     private final DeviceCommandRepository deviceCommandRepository;
     private final RentalLogRepository rentalLogRepository;
@@ -33,7 +30,7 @@ public class UmbrellaService {
     }
 
     @Transactional
-    public RentResponse rentUmbrella(Long deviceId) {
+    public RentResponse rentUmbrella(Long userId, Long deviceId) {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 우산 꽂이입니다. deviceId=" + deviceId));
 
@@ -45,13 +42,13 @@ public class UmbrellaService {
         deviceRepository.save(device);
         cancelPendingCommands(deviceId);
         deviceCommandRepository.save(new DeviceCommand(deviceId, CommandStatus.PENDING));
-        rentalLogRepository.save(new RentalLog(TEMP_USER_ID, deviceId, RentalStatus.BORROW));
+        rentalLogRepository.save(new RentalLog(userId, deviceId, RentalStatus.BORROW));
 
         return RentResponse.accepted();
     }
 
     @Transactional
-    public RentResponse returnUmbrella(Long deviceId) {
+    public RentResponse returnUmbrella(Long userId, Long deviceId) {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 우산 꽂이입니다. deviceId=" + deviceId));
 
@@ -63,13 +60,13 @@ public class UmbrellaService {
         deviceRepository.save(device);
         cancelPendingCommands(deviceId);
         deviceCommandRepository.save(new DeviceCommand(deviceId, CommandStatus.PENDING));
-        rentalLogRepository.save(new RentalLog(TEMP_USER_ID, deviceId, RentalStatus.RETURN));
+        rentalLogRepository.save(new RentalLog(userId, deviceId, RentalStatus.RETURN));
 
         return RentResponse.accepted();
     }
 
-    public MyRentalResponse getMyRentedUmbrella() {
-        return rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(TEMP_USER_ID)
+    public MyRentalResponse getMyRentedUmbrella(Long userId) {
+        return rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(userId)
                 .filter(log -> log.getStatus() == RentalStatus.BORROW)
                 .map(log -> MyRentalResponse.of(log.getDeviceId()))
                 .orElseGet(MyRentalResponse::none);

@@ -66,7 +66,7 @@ class UmbrellaServiceTest {
         Device device = newDevice(false, false);
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
 
-        RentResponse response = umbrellaService.rentUmbrella(1L);
+        RentResponse response = umbrellaService.rentUmbrella(10L, 1L);
 
         assertThat(device.isBorrowed()).isTrue();
         assertThat(response).isEqualTo(RentResponse.accepted());
@@ -79,6 +79,7 @@ class UmbrellaServiceTest {
 
         ArgumentCaptor<RentalLog> logCaptor = ArgumentCaptor.forClass(RentalLog.class);
         verify(rentalLogRepository).save(logCaptor.capture());
+        assertThat(logCaptor.getValue().getUserId()).isEqualTo(10L);
         assertThat(logCaptor.getValue().getDeviceId()).isEqualTo(1L);
         assertThat(logCaptor.getValue().getStatus()).isEqualTo(RentalStatus.BORROW);
     }
@@ -87,7 +88,7 @@ class UmbrellaServiceTest {
     void 존재하지_않는_deviceId면_예외를_던진다() {
         given(deviceRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
+        assertThatThrownBy(() -> umbrellaService.rentUmbrella(10L, 1L))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(deviceCommandRepository, never()).save(any());
@@ -99,7 +100,7 @@ class UmbrellaServiceTest {
         Device device = newDevice(false, true);
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
 
-        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
+        assertThatThrownBy(() -> umbrellaService.rentUmbrella(10L, 1L))
                 .isInstanceOf(IllegalStateException.class);
 
         verify(deviceRepository, never()).save(any());
@@ -112,7 +113,7 @@ class UmbrellaServiceTest {
         Device device = newDevice(true, false);
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
 
-        assertThatThrownBy(() -> umbrellaService.rentUmbrella(1L))
+        assertThatThrownBy(() -> umbrellaService.rentUmbrella(10L, 1L))
                 .isInstanceOf(IllegalStateException.class);
 
         verify(deviceRepository, never()).save(any());
@@ -123,7 +124,7 @@ class UmbrellaServiceTest {
         Device device = newDevice(false, true);
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
 
-        RentResponse response = umbrellaService.returnUmbrella(1L);
+        RentResponse response = umbrellaService.returnUmbrella(10L, 1L);
 
         assertThat(device.isBorrowed()).isFalse();
         assertThat(response).isEqualTo(RentResponse.accepted());
@@ -135,6 +136,7 @@ class UmbrellaServiceTest {
 
         ArgumentCaptor<RentalLog> logCaptor = ArgumentCaptor.forClass(RentalLog.class);
         verify(rentalLogRepository).save(logCaptor.capture());
+        assertThat(logCaptor.getValue().getUserId()).isEqualTo(10L);
         assertThat(logCaptor.getValue().getStatus()).isEqualTo(RentalStatus.RETURN);
     }
 
@@ -147,7 +149,7 @@ class UmbrellaServiceTest {
         given(deviceCommandRepository.findAllByDeviceIdAndStatus(1L, CommandStatus.PENDING))
                 .willReturn(List.of(stalePending));
 
-        umbrellaService.rentUmbrella(1L);
+        umbrellaService.rentUmbrella(10L, 1L);
 
         assertThat(stalePending.getStatus()).isEqualTo(CommandStatus.CANCELLED);
         verify(deviceCommandRepository).saveAll(List.of(stalePending));
@@ -157,7 +159,7 @@ class UmbrellaServiceTest {
     void 반납_대상_deviceId가_존재하지_않으면_예외를_던진다() {
         given(deviceRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> umbrellaService.returnUmbrella(1L))
+        assertThatThrownBy(() -> umbrellaService.returnUmbrella(10L, 1L))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(deviceCommandRepository, never()).save(any());
@@ -169,7 +171,7 @@ class UmbrellaServiceTest {
         Device device = newDevice(false, false);
         given(deviceRepository.findById(1L)).willReturn(Optional.of(device));
 
-        assertThatThrownBy(() -> umbrellaService.returnUmbrella(1L))
+        assertThatThrownBy(() -> umbrellaService.returnUmbrella(10L, 1L))
                 .isInstanceOf(IllegalStateException.class);
 
         verify(deviceRepository, never()).save(any());
@@ -179,29 +181,29 @@ class UmbrellaServiceTest {
 
     @Test
     void 최근_로그가_BORROW이면_대여중인_deviceId를_반환한다() {
-        RentalLog log = new RentalLog(1L, 5L, RentalStatus.BORROW);
-        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(1L)).willReturn(Optional.of(log));
+        RentalLog log = new RentalLog(10L, 5L, RentalStatus.BORROW);
+        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(10L)).willReturn(Optional.of(log));
 
-        MyRentalResponse response = umbrellaService.getMyRentedUmbrella();
+        MyRentalResponse response = umbrellaService.getMyRentedUmbrella(10L);
 
         assertThat(response).isEqualTo(MyRentalResponse.of(5L));
     }
 
     @Test
     void 최근_로그가_RETURN이면_대여중이_아니다() {
-        RentalLog log = new RentalLog(1L, 5L, RentalStatus.RETURN);
-        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(1L)).willReturn(Optional.of(log));
+        RentalLog log = new RentalLog(10L, 5L, RentalStatus.RETURN);
+        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(10L)).willReturn(Optional.of(log));
 
-        MyRentalResponse response = umbrellaService.getMyRentedUmbrella();
+        MyRentalResponse response = umbrellaService.getMyRentedUmbrella(10L);
 
         assertThat(response).isEqualTo(MyRentalResponse.none());
     }
 
     @Test
     void 로그가_없으면_대여중이_아니다() {
-        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(1L)).willReturn(Optional.empty());
+        given(rentalLogRepository.findFirstByUserIdOrderByLogIdDesc(10L)).willReturn(Optional.empty());
 
-        MyRentalResponse response = umbrellaService.getMyRentedUmbrella();
+        MyRentalResponse response = umbrellaService.getMyRentedUmbrella(10L);
 
         assertThat(response).isEqualTo(MyRentalResponse.none());
     }
