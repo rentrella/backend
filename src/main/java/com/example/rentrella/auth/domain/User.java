@@ -73,6 +73,10 @@ public class User {
         this.password = password;
     }
 
+    public void changeEndBanned(LocalDate endBanned) {
+        this.endBanned = endBanned;
+    }
+
     public static User newDataGsmStudent() {
         User user = new User();
         user.role = UserRole.USER;
