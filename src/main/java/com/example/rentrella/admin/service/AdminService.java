@@ -2,6 +2,8 @@ package com.example.rentrella.admin.service;
 
 import com.example.rentrella.admin.dto.response.AdminActionResponse;
 import com.example.rentrella.admin.dto.response.RentalLogResponse;
+import com.example.rentrella.auth.domain.User;
+import com.example.rentrella.auth.repository.UserRepository;
 import com.example.rentrella.device.entity.CommandStatus;
 import com.example.rentrella.device.entity.Device;
 import com.example.rentrella.device.entity.DeviceCommand;
@@ -12,15 +14,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AdminService {
 
+    private static final long USER_BAN_DAYS = 7;
+
     private final DeviceRepository deviceRepository;
     private final DeviceCommandRepository deviceCommandRepository;
     private final RentalLogRepository rentalLogRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public AdminActionResponse lockUmbrella(Long deviceId) {
@@ -47,9 +53,15 @@ public class AdminService {
         return AdminActionResponse.of("명령 접수됨");
     }
 
-    // TODO: feat/auth의 User 엔티티(users.end_banned) 병합 후 구현 — 7일 뒤 만료되는 대여 금지 처리
+    @Transactional
     public AdminActionResponse lockUser(Long userId) {
-        throw new UnsupportedOperationException();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다. userId=" + userId));
+
+        user.changeEndBanned(LocalDate.now().plusDays(USER_BAN_DAYS));
+        userRepository.save(user);
+
+        return AdminActionResponse.of("대여 금지 처리 완료");
     }
 
     public List<RentalLogResponse> getRentalLogs() {
